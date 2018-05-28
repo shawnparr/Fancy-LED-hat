@@ -25,7 +25,13 @@
 #define DATA_PIN 17
 #define MAX_LED_DELAY 35
 #define MIN_LED_DELAY 10
-#define SERIAL_DEBUG false
+#define ROLLOFFSET 20
+#define MAXROLL 35
+#define MINROLL -35
+#define MAXPITCH 40 
+#define MINPITCH -5 
+#define PITCHCENTER 15
+#define SERIAL_DEBUG true
 
 /*
  * BNO055 Setup
@@ -745,25 +751,26 @@ void loop() {
     Roll = (float)EulCount[1]/16.;  
     Pitch = (float)EulCount[2]/16.; 
 
+    if(SERIAL_DEBUG) {
+      Serial.println((String)"Pitch: " + Pitch + " Roll: " + Roll + " Yaw: " + Yaw);
+    }
+
     /*
      * Use Roll values for LED hues
      */
 
-    // Uncomment the next line to see Roll values in the serial monitor
-    //Serial.println((String)"Roll: " + Roll);
-    
     uint8_t hue = 0;
 
     // My roll value was off by about -20 from truly centered, so you can adjust the following variable to try to center your values
-    float rollCal = Roll + 20;
+    float rollCal = Roll + ROLLOFFSET;
 
     // Map "sane" values since hat will be on head and should only have limited motion
-    if(rollCal < -35) {
+    if(rollCal < MINROLL) {
       hue = 0;
-    } else if(rollCal > 35) {
+    } else if(rollCal > MAXROLL) {
       hue = 255;
     } else {
-      hue = map(rollCal, -35, 35, 0, 255);
+      hue = map(rollCal, MINROLL, MAXROLL, 0, 255);
     }
 
     // Set the hue for our particle
@@ -772,27 +779,19 @@ void loop() {
     /*
      * Use Pitch values for speed LEDS move
      */
-     
-    // Uncomment the next line to see Pitch values in the serial monitor
-    //Serial.println((String)"Pitch: " + Pitch);
     
-    // Try to set some sane limits, since our head can only move on our neck so much, based on my units calibration, probably needs tweaked
-    int maxPitch = 40;  
-    int minPitch = -5; 
-    int pitchCenter = 15;
-    
-    if(Pitch < minPitch) {
+    if(Pitch < MINPITCH) {
       particleDir = 0;
       curLedDelay = MIN_LED_DELAY;
-    } else if(Pitch < pitchCenter) {
+    } else if(Pitch < PITCHCENTER) {
       particleDir = 0;
-      curLedDelay = map(Pitch, minPitch, pitchCenter, MIN_LED_DELAY, MAX_LED_DELAY);
-    } else if(Pitch > maxPitch) {
+      curLedDelay = map(Pitch, MINPITCH, PITCHCENTER, MIN_LED_DELAY, MAX_LED_DELAY);
+    } else if(Pitch > MAXPITCH) {
       particleDir = 1;
       curLedDelay = MIN_LED_DELAY;
     } else {
       particleDir = 1;
-      curLedDelay = map(Pitch, pitchCenter, maxPitch, MAX_LED_DELAY, MIN_LED_DELAY);
+      curLedDelay = map(Pitch, PITCHCENTER, MAXPITCH, MAX_LED_DELAY, MIN_LED_DELAY);
     }
 
     particle1.currDelay = curLedDelay;
