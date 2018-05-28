@@ -427,6 +427,12 @@ void setAllLeds(CRGB color) {
   FastLED.show();
 }
 
+void fadeAllLeds() {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    leds[i].fadeToBlackBy(192);
+  }
+}
+
 void displayStatus(int statusNum, bool statusVal) {
   int Pos1 = 0;
   int Pos2 = 0;
@@ -503,8 +509,7 @@ class Particle {
         Pos2 = (centerLed -1) - currPos;
       }
       
-      leds[Pos1] = CRGB::Black;
-      leds[Pos2] = CRGB::Black;
+      fadeAllLeds();
 
       if(particleDir) {
         if((currPos == NUM_LEDS/2) && oddLeds){
